@@ -145,13 +145,13 @@
   <ItemGroup>
     <ClCompile Include="ExpressionCalculator.cpp" />
     <ClCompile Include="ExpressionParser.cpp" />
-    <ClCompile Include="iToken.cpp" />
+    <ClCompile Include="Token.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="ExpressionParser.h" />
     <ClInclude Include="ForwardDeclare.h" />
-    <ClInclude Include="iToken.h" />
+    <ClInclude Include="Token.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -34,6 +34,19 @@ std::string CNumberToken::toString() const
     result.pop_back();
     result.pop_back();
     result.pop_back();
+    result.pop_back();
+    result.pop_back();
 
     return  result;
+}
+
+std::string CBaseToken::toString() const
+{
+    if (m_type == ETokenType::LEFT_PARENTHESIS)
+        return "(";
+    else
+        if (m_type == ETokenType::RIGHT_PARENTHESIS)
+            return ")";
+        else
+            return "?";
 }

@@ -10,7 +10,7 @@ public:
 	~CBaseToken() = default;
 public:
 	ETokenType getType() const { return m_type; };
-	virtual std::string toString() const { return ""; };
+	virtual std::string toString() const;
 private:
 	ETokenType m_type = ETokenType::UNKNOWN;
 };
