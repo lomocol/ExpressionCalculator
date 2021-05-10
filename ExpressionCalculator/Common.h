@@ -1,0 +1,19 @@
+#pragma once
+
+enum class ETokenType
+{
+	NUMBER,
+	OPERATOR,
+	LEFT_PARENTHESIS,
+	RIGHT_PARENTHESIS,
+	UNKNOWN
+};
+
+enum class EOperations
+{
+	SUBSTRACTION,
+	ADDITION,
+	DIVISION,
+	MULTIPLICATION,
+	UNKNOWN
+};

@@ -18,5 +18,25 @@
     <ClCompile Include="ExpressionCalculator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ExpressionParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="iToken.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ExpressionParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ForwardDeclare.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iToken.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
