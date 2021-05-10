@@ -10,7 +10,9 @@
 static class ExpressionParser
 {
 public:
-	static std::string parseExpression(const std::string& expression);
+	static std::queue<CBaseTokenPtr> parseExpression(const std::string& expression);
+	static float calculateExpression(std::queue<CBaseTokenPtr>& mQueue);
+	static std::string toString(std::queue<CBaseTokenPtr> queue);
 
 private:
 	static CBaseTokenPtr getNextToken(std::string_view& sv);

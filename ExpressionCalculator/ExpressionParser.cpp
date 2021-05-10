@@ -2,7 +2,7 @@
 #include <string_view>
 
 
-std::string ExpressionParser::parseExpression(const std::string& exp)
+std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& exp)
 {
 	auto strw = std::string_view{ exp };
 	auto mStack = std::stack<CBaseTokenPtr>{};
@@ -65,14 +65,10 @@ std::string ExpressionParser::parseExpression(const std::string& exp)
 		mStack.pop();
 	}
 
-	while (!mQueue.empty())
-	{
-		str += mQueue.front()->toString();
-		str += ' ';
-		mQueue.pop();
-	}
+	if (!mStack.empty())
+		throw std::exception("Too many operators or something else;");
 
-	return str;
+	return mQueue;
 }
 
 CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv)
@@ -212,6 +208,19 @@ bool ExpressionParser::leftAssociative(const CBaseTokenPtr first)
 	return true;
 }
 
+std::string ExpressionParser::toString(std::queue<CBaseTokenPtr> queue)
+{
+	std::string str{};
+	while (!queue.empty())
+	{
+		str += queue.front()->toString();
+		str += ' ';
+		queue.pop();
+	}
+
+	return str;
+}
+
 void ExpressionParser::processOperator(std::stack<CBaseTokenPtr>& mStack, std::queue<CBaseTokenPtr>& mQueue, CBaseTokenPtr token)
 {
 	while (!mStack.empty() &&
@@ -243,12 +252,31 @@ void ExpressionParser::processRightParenthesis(std::stack<CBaseTokenPtr>& mStack
 		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
 		mStack.pop();
 	}
-	if (!mStack.empty() && mStack.top()->getType() == ETokenType::OPERATOR)
+}
+
+float ExpressionParser::calculateExpression(std::queue<CBaseTokenPtr>& mQueue)
+{
+	std::stack<CBaseTokenPtr> mStack{};
+
+	while (!mQueue.empty())
 	{
-		int x = 5;
-		/*mQueue.push(mStack.top());
-		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
-		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
-		mStack.pop();*/
+		const auto frontToken = mQueue.front();
+		if (frontToken->getType() == ETokenType::NUMBER)
+		{
+			mStack.push(frontToken);
+		}else
+			if (frontToken->getType() == ETokenType::OPERATOR)
+			{
+				auto second = std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
+				mStack.pop();
+				auto first = std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
+				mStack.pop();
+				auto result = std::static_pointer_cast<COperationToken>(frontToken)->applyOperator(first, second);
+				mStack.push(std::make_shared<CNumberToken>(ETokenType::OPERATOR, result));
+			}
+
+		mQueue.pop();
 	}
+
+	return std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
 }

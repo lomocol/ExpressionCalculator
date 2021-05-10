@@ -1,5 +1,25 @@
 #include "Token.h"
 
+float COperationToken::applyOperator(float left, float right) const
+{
+	switch (m_operationType)
+	{
+	case EOperations::SUBSTRACTION:
+        return left - right;
+		break;
+	case EOperations::ADDITION:
+		return left + right;
+		break;
+	case EOperations::DIVISION:
+		return left / right;
+		break;
+	case EOperations::MULTIPLICATION:
+		return left * right;
+		break;
+	}
+	return 0.0f;
+}
+
 std::string COperationToken::toString() const
 {
     char ch = '_';
@@ -33,9 +53,9 @@ std::string CNumberToken::toString() const
     result.pop_back();
     result.pop_back();
     result.pop_back();
-    result.pop_back();
-    result.pop_back();
-    result.pop_back();
+    //result.pop_back();
+    //result.pop_back();
+    //result.pop_back();
 
     return  result;
 }
