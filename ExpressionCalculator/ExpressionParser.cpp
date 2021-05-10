@@ -21,6 +21,7 @@ std::string ExpressionParser::parseExpression(const std::string& exp)
 		{
 		case ETokenType::NUMBER:
 		{
+			std::cout << "Add token to output :" << token->toString() << std::endl;
 			mQueue.push(token);
 		}
 		break;
@@ -31,6 +32,7 @@ std::string ExpressionParser::parseExpression(const std::string& exp)
 		break;
 		case ETokenType::LEFT_PARENTHESIS:
 		{
+			std::cout << "Push token to stack :" << token->toString() << std::endl;
 			mStack.push(token);
 		}
 		break;
@@ -38,6 +40,7 @@ std::string ExpressionParser::parseExpression(const std::string& exp)
 		{
 			processRightParenthesis(mStack, mQueue, token);
 		}
+		break;
 		case ETokenType::UNKNOWN:
 		{
 			throw std::exception("UNKNOWN TOKEN");
@@ -56,6 +59,8 @@ std::string ExpressionParser::parseExpression(const std::string& exp)
 			throw std::exception("Extra Parenthesis");
 		}
 
+		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 	}
@@ -81,15 +86,15 @@ CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv)
 
 	sv.remove_prefix(firstInd);
 	const char symbol = sv.front();
-	if (symbol == '{')
+	if (symbol == '(')
 	{
 		token = std::make_shared<CBaseToken>(ETokenType::LEFT_PARENTHESIS);
 		sv.remove_prefix(1);
 	}
 	else
-		if (symbol == '}')
+		if (symbol == ')')
 		{
-			token = std::make_shared<CBaseToken>(ETokenType::LEFT_PARENTHESIS);
+			token = std::make_shared<CBaseToken>(ETokenType::RIGHT_PARENTHESIS);
 			sv.remove_prefix(1);
 		}
 		else
@@ -213,9 +218,12 @@ void ExpressionParser::processOperator(std::stack<CBaseTokenPtr>& mStack, std::q
 		mStack.top()->getType() != ETokenType::LEFT_PARENTHESIS &&
 		(firstIsGreater(mStack.top(), token) || (areEqual(mStack.top(), token) && leftAssociative(token))))
 	{
+		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 	}
+	std::cout << "Push token to stack :" << token->toString() << std::endl;
 	mStack.push(token);
 }
 
@@ -223,6 +231,8 @@ void ExpressionParser::processRightParenthesis(std::stack<CBaseTokenPtr>& mStack
 {
 	while (mStack.top()->getType() != ETokenType::LEFT_PARENTHESIS)
 	{
+		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 		if (mStack.empty())
@@ -230,11 +240,15 @@ void ExpressionParser::processRightParenthesis(std::stack<CBaseTokenPtr>& mStack
 	}
 	if (mStack.top()->getType() == ETokenType::LEFT_PARENTHESIS)
 	{
+		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
 		mStack.pop();
 	}
 	if (!mStack.empty() && mStack.top()->getType() == ETokenType::OPERATOR)
 	{
-		mQueue.push(mStack.top());
-		mStack.pop();
+		int x = 5;
+		/*mQueue.push(mStack.top());
+		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
+		mStack.pop();*/
 	}
 }
