@@ -9,6 +9,7 @@
 
 static class ExpressionParser
 {
+	friend class TestHelper;
 public:
 	static std::queue<CBaseTokenPtr> parseExpression(const std::string& expression);
 	static float calculateExpression(std::queue<CBaseTokenPtr>& mQueue);

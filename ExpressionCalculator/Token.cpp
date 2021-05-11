@@ -52,10 +52,10 @@ std::string CNumberToken::toString() const
     result.pop_back();
     result.pop_back();
     result.pop_back();
-    result.pop_back();
-    //result.pop_back();
-    //result.pop_back();
-    //result.pop_back();
+	result.pop_back();
+	result.pop_back();
+	result.pop_back();
+	result.pop_back();
 
     return  result;
 }

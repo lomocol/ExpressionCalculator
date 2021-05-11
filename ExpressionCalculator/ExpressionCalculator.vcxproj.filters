@@ -24,6 +24,9 @@
     <ClCompile Include="Token.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExpressionParser.h">
@@ -37,6 +40,15 @@
     </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="profile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_runner.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestHelper.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -14,14 +14,14 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 		const auto token = getNextToken(strw);
 
 		if (token == nullptr)
-			break;
+			continue;;
 			//throw std::exception("WRONG TOKEN");
 
 		switch (token->getType())
 		{
 		case ETokenType::NUMBER:
 		{
-			std::cout << "Add token to output :" << token->toString() << std::endl;
+			//std::cout << "Add token to output :" << token->toString() << std::endl;
 			mQueue.push(token);
 		}
 		break;
@@ -32,7 +32,7 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 		break;
 		case ETokenType::LEFT_PARENTHESIS:
 		{
-			std::cout << "Push token to stack :" << token->toString() << std::endl;
+			//std::cout << "Push token to stack :" << token->toString() << std::endl;
 			mStack.push(token);
 		}
 		break;
@@ -59,8 +59,8 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 			throw std::exception("Extra Parenthesis");
 		}
 
-		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
-		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
+		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		//std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 	}
@@ -108,7 +108,7 @@ CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv)
 				}
 				else
 				{
-					if(symbol != ' ')
+					if(symbol != ' ' && symbol != '\n')
 						throw std::exception("Wrong Operator");
 				}
 				sv.remove_prefix(1);
@@ -227,12 +227,12 @@ void ExpressionParser::processOperator(std::stack<CBaseTokenPtr>& mStack, std::q
 		mStack.top()->getType() != ETokenType::LEFT_PARENTHESIS &&
 		(firstIsGreater(mStack.top(), token) || (areEqual(mStack.top(), token) && leftAssociative(token))))
 	{
-		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
-		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
+		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		//std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 	}
-	std::cout << "Push token to stack :" << token->toString() << std::endl;
+	//std::cout << "Push token to stack :" << token->toString() << std::endl;
 	mStack.push(token);
 }
 
@@ -240,8 +240,8 @@ void ExpressionParser::processRightParenthesis(std::stack<CBaseTokenPtr>& mStack
 {
 	while (mStack.top()->getType() != ETokenType::LEFT_PARENTHESIS)
 	{
-		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
-		std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
+		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		//std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 		if (mStack.empty())
@@ -249,7 +249,7 @@ void ExpressionParser::processRightParenthesis(std::stack<CBaseTokenPtr>& mStack
 	}
 	if (mStack.top()->getType() == ETokenType::LEFT_PARENTHESIS)
 	{
-		std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
+		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
 		mStack.pop();
 	}
 }
@@ -267,6 +267,8 @@ float ExpressionParser::calculateExpression(std::queue<CBaseTokenPtr>& mQueue)
 		}else
 			if (frontToken->getType() == ETokenType::OPERATOR)
 			{
+				if (mQueue.size() < 10)
+					int x = 5;
 				auto second = std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
 				mStack.pop();
 				auto first = std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
