@@ -79,6 +79,8 @@ void AssertEqual(const T& t, const U& u, const std::string& hint = {}) {
 	}
 }
 
+void AssertEqualFloats(float t, float u, const std::string& hint = {});
+
 inline void Assert(bool b, const std::string& hint) {
 	AssertEqual(b, true, hint);
 }
@@ -123,6 +125,14 @@ private:
     << #x << " != " << #y << ", "                     \
     << FILE_NAME << ":" << __LINE__;                  \
   AssertEqual(x, y, __assert_equal_private_os.str()); \
+}
+
+#define ASSERT_EQUAL_FLOATS(x, y) {                          \
+  std::ostringstream __assert_equal_private_os;       \
+  __assert_equal_private_os                           \
+    << #x << " != " << #y << ", "                     \
+    << FILE_NAME << ":" << __LINE__;                  \
+  AssertEqualFloats(x, y, __assert_equal_private_os.str()); \
 }
 
 #define ASSERT(x) {                           \

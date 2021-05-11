@@ -7,38 +7,40 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 	auto strw = std::string_view{ exp };
 	auto mStack = std::stack<CBaseTokenPtr>{};
 	auto mQueue = std::queue<CBaseTokenPtr>{};
-	auto str = std::string{};
 
+	bool canBeNegativeNumber = true;
 	while (!strw.empty())
 	{
-		const auto token = getNextToken(strw);
+		const auto token = getNextToken(strw, canBeNegativeNumber);
 
 		if (token == nullptr)
-			continue;;
-			//throw std::exception("WRONG TOKEN");
+			continue;
 
 		switch (token->getType())
 		{
-		case ETokenType::NUMBER:
+		case ETokenType::FLOAT_NUMBER:
+		case ETokenType::INTEGER_NUMBER:
 		{
-			//std::cout << "Add token to output :" << token->toString() << std::endl;
 			mQueue.push(token);
+			canBeNegativeNumber = false;
 		}
 		break;
 		case ETokenType::OPERATOR:
 		{
 			processOperator(mStack, mQueue, token);
+			canBeNegativeNumber = true;
 		}
 		break;
 		case ETokenType::LEFT_PARENTHESIS:
 		{
-			//std::cout << "Push token to stack :" << token->toString() << std::endl;
 			mStack.push(token);
+			canBeNegativeNumber = true;
 		}
 		break;
 		case ETokenType::RIGHT_PARENTHESIS:
 		{
 			processRightParenthesis(mStack, mQueue, token);
+			canBeNegativeNumber = false;
 		}
 		break;
 		case ETokenType::UNKNOWN:
@@ -46,8 +48,6 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 			throw std::exception("UNKNOWN TOKEN");
 		}
 		break;
-		default:
-			break;
 		}
 	}
 
@@ -59,8 +59,6 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 			throw std::exception("Extra Parenthesis");
 		}
 
-		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
-		//std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 	}
@@ -71,7 +69,7 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 	return mQueue;
 }
 
-CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv)
+CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv, bool canBeNegativeNumber)
 {
 	CBaseTokenPtr token = nullptr;
 
@@ -82,10 +80,10 @@ CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv)
 
 	sv.remove_prefix(firstInd);
 	const char symbol = sv.front();
-	if (symbol == '(')
+
+	if (isNumber(symbol))
 	{
-		token = std::make_shared<CBaseToken>(ETokenType::LEFT_PARENTHESIS);
-		sv.remove_prefix(1);
+		token = makeNumberToken(sv, false);
 	}
 	else
 		if (symbol == ')')
@@ -94,24 +92,36 @@ CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv)
 			sv.remove_prefix(1);
 		}
 		else
-			if (isNumber(symbol))
+			if (symbol == '(')
 			{
-				const float number = toNumber(sv);
-				token = std::make_shared<CNumberToken>(ETokenType::NUMBER, number);
+				token = std::make_shared<CBaseToken>(ETokenType::LEFT_PARENTHESIS);
+				sv.remove_prefix(1);
 			}
 			else
 			{
 				auto operand = isOperator(symbol);
 				if (operand != EOperations::UNKNOWN)
 				{
-					token = std::make_shared<COperationToken>(ETokenType::OPERATOR, operand);
+					if (operand == EOperations::SUBSTRACTION && canBeNegativeNumber)
+					{
+						sv.remove_prefix(1);
+						if (!sv.empty() && isNumber(sv.front()))
+						{
+							token = makeNumberToken(sv, true);
+						}
+					}
+					else
+					{
+						token = std::make_shared<COperationToken>(ETokenType::OPERATOR, operand);
+						sv.remove_prefix(1);
+					}
 				}
 				else
 				{
-					if(symbol != ' ' && symbol != '\n')
+					if(symbol != ' ')
 						throw std::exception("Wrong Operator");
+					sv.remove_prefix(1);
 				}
-				sv.remove_prefix(1);
 			}
 				
 	return token;
@@ -146,7 +156,7 @@ EOperations ExpressionParser::isOperator(char ch)
 	return EOperations::UNKNOWN;
 }
 
-float ExpressionParser::toNumber(std::string_view& sv)
+float ExpressionParser::toFloat(std::string_view& sv, size_t pointPosition)
 {
 	float rank = 1u;
 
@@ -187,11 +197,11 @@ float ExpressionParser::toNumber(std::string_view& sv)
 	return number;
 }
 
-bool ExpressionParser::firstIsGreater(const CBaseTokenPtr first, const CBaseTokenPtr second)
+bool ExpressionParser::firstIsGreaterOrEqual(const CBaseTokenPtr first, const CBaseTokenPtr second)
 {
-	auto first_type = std::static_pointer_cast<COperationToken>(first);
-	auto second_type = std::static_pointer_cast<COperationToken>(second);
-	auto result = first_type->getPrecedence() > second_type->getPrecedence();
+	const auto first_type = std::static_pointer_cast<COperationToken>(first);
+	const auto second_type = std::static_pointer_cast<COperationToken>(second);
+	const auto result = first_type->getPrecedence() >= second_type->getPrecedence();
 	return result;
 }
 
@@ -203,10 +213,79 @@ bool ExpressionParser::areEqual(const CBaseTokenPtr first, const CBaseTokenPtr s
 	return result;
 }
 
-bool ExpressionParser::leftAssociative(const CBaseTokenPtr first)
+size_t ExpressionParser::findFirstNotNumber(const std::string_view& sv)
 {
-	return true;
+	size_t position = std::string::npos;
+	for (size_t i = 0; i < sv.size(); i++)
+	{
+		if (!isNumber(sv[i]))
+		{
+			position = i;
+			break;
+		}
+	}
+
+	return position;
 }
+
+size_t ExpressionParser::findPoint(const std::string_view& sv, size_t offset)
+{
+	size_t position = std::string::npos;
+	for (size_t i = offset; i < sv.size(); i++)
+	{
+		if (sv[i] == '.' || sv[i] == ',')
+		{
+			position = i;
+			break;
+		}
+		else
+		{
+			if (!isNumber(sv[i]))
+			{
+				break;
+			}
+		}
+	}
+
+	return position;
+}
+
+size_t ExpressionParser::parseNumber(const std::string_view& sv, size_t numbersNum)
+{
+	size_t number = 0u;
+	size_t rank = 1u;
+	for (int i = numbersNum - 1; i >= 0; i--)
+	{
+		size_t tmpNumber = sv[i] - '0';
+		number += tmpNumber * rank;
+		rank *= 10u;
+	}
+	return number;
+}
+
+float ExpressionParser::parseFloatingPart(const std::string_view& sv, size_t numbersNum)
+{
+	float number = 0u;
+	size_t rank = 10u;
+	for (size_t i = 0 ; i < numbersNum; i++)
+	{
+		size_t tmpNumber = sv[i] - '0';
+		number += tmpNumber / rank;
+		rank *= 10u;
+	}
+	return number;
+}
+
+size_t ExpressionParser::powerOfTen(size_t power)
+{
+	size_t number = 1u;
+	for (size_t i = 0; i < power; i++)
+	{
+		number *= 10u;
+	}
+	return number;
+}
+
 
 std::string ExpressionParser::toString(std::queue<CBaseTokenPtr> queue)
 {
@@ -225,14 +304,11 @@ void ExpressionParser::processOperator(std::stack<CBaseTokenPtr>& mStack, std::q
 {
 	while (!mStack.empty() &&
 		mStack.top()->getType() != ETokenType::LEFT_PARENTHESIS &&
-		(firstIsGreater(mStack.top(), token) || (areEqual(mStack.top(), token) && leftAssociative(token))))
+		(firstIsGreaterOrEqual(mStack.top(), token)))
 	{
-		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
-		//std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 	}
-	//std::cout << "Push token to stack :" << token->toString() << std::endl;
 	mStack.push(token);
 }
 
@@ -240,45 +316,105 @@ void ExpressionParser::processRightParenthesis(std::stack<CBaseTokenPtr>& mStack
 {
 	while (mStack.top()->getType() != ETokenType::LEFT_PARENTHESIS)
 	{
-		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
-		//std::cout << "Push token to output :" << mStack.top()->toString() << std::endl;
 		mQueue.push(mStack.top());
 		mStack.pop();
 		if (mStack.empty())
 			throw std::exception("To many '}'");
 	}
+
 	if (mStack.top()->getType() == ETokenType::LEFT_PARENTHESIS)
 	{
-		//std::cout << "Pop token from stack :" << mStack.top()->toString() << std::endl;
 		mStack.pop();
 	}
 }
 
-float ExpressionParser::calculateExpression(std::queue<CBaseTokenPtr>& mQueue)
+float ExpressionParser::parseFloat(std::string_view& sv, bool minus, size_t pointPos)
+{
+	auto integerPart = parseNumber(sv, pointPos);
+	sv.remove_prefix(pointPos + 1);
+	auto numbersAfterPoint = findFirstNotNumber(sv);
+
+	if (numbersAfterPoint == 0)
+		throw std::exception("Empty after point part of number");
+
+	if (numbersAfterPoint == std::string::npos)
+		numbersAfterPoint = sv.size();
+
+	auto floatingPart = parseFloatingPart(sv, numbersAfterPoint);
+	sv.remove_prefix(numbersAfterPoint);
+
+	float result = integerPart + floatingPart;
+
+	if (minus)
+		result *= -1;
+	return result;
+}
+
+CBaseTokenPtr ExpressionParser::makeNumberToken(std::string_view& sv, bool minusFirst)
+{
+	CBaseTokenPtr token = nullptr;
+	const auto pointPos = findPoint(sv, minusFirst);
+
+	// parse float
+	if (pointPos != std::string::npos)
+	{
+		float number = parseFloat(sv, minusFirst, pointPos);
+		token = std::make_shared<CFloatNumberToken>(number);
+	}
+	// parse integer number
+	else
+	{
+		int number = parseInteger(sv, minusFirst);
+		token = std::make_shared<CIntNumberToken>(number);
+	}
+
+	return token;
+}
+
+int ExpressionParser::parseInteger(std::string_view& sv, bool minus)
+{
+	auto numberOfNumbers = findFirstNotNumber(sv);
+	if (numberOfNumbers == std::string::npos)
+		numberOfNumbers = sv.size();
+
+	int number = parseNumber(sv, numberOfNumbers);
+	sv.remove_prefix(numberOfNumbers);
+	if (minus)
+		number *= -1;
+	return number;
+}
+
+float ExpressionParser::calculateExpression(std::queue<CBaseTokenPtr>&& mQueue)
 {
 	std::stack<CBaseTokenPtr> mStack{};
 
 	while (!mQueue.empty())
 	{
 		const auto frontToken = mQueue.front();
-		if (frontToken->getType() == ETokenType::NUMBER)
+		if (frontToken->getType() == ETokenType::INTEGER_NUMBER || frontToken->getType() == ETokenType::FLOAT_NUMBER)
 		{
 			mStack.push(frontToken);
 		}else
 			if (frontToken->getType() == ETokenType::OPERATOR)
 			{
-				if (mQueue.size() < 10)
-					int x = 5;
-				auto second = std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
+				const auto second = std::static_pointer_cast<CFloatNumberToken>(mStack.top())->getValue();
+				mStack.pop(); 
+
+				float first = std::static_pointer_cast<CFloatNumberToken>(mStack.top())->getValue();
 				mStack.pop();
-				auto first = std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
-				mStack.pop();
-				auto result = std::static_pointer_cast<COperationToken>(frontToken)->applyOperator(first, second);
-				mStack.push(std::make_shared<CNumberToken>(ETokenType::OPERATOR, result));
+
+				const auto result = std::static_pointer_cast<COperationToken>(frontToken)->applyOperator(first, second);
+				mStack.push(std::make_shared<CFloatNumberToken>(result));
 			}
 
 		mQueue.pop();
 	}
 
-	return std::static_pointer_cast<CNumberToken>(mStack.top())->getValue();
+	return std::static_pointer_cast<CFloatNumberToken>(mStack.top())->getValue();
+}
+
+float ExpressionParser::calculateExpression(const std::string& expression)
+{
+	auto mQueue = parseExpression(expression);
+	return calculateExpression(std::move(mQueue));
 }

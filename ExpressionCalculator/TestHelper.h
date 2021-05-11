@@ -7,11 +7,9 @@ class TestHelper
 {
 public:
 	void runAllTests();
-	void runSpeedTests();
 private:
-	void runSpelling();
-
-private:
-	TestRunner runner = {};
+	static void runCompleteSpeedTests();
+	static void runParsingTests();
+	static void runSpelling();
 };
 

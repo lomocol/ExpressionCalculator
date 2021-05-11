@@ -15,11 +15,11 @@ private:
 	ETokenType m_type = ETokenType::UNKNOWN;
 };
 
-class CNumberToken : public CBaseToken
+class CFloatNumberToken : public CBaseToken
 {
 public:
-	CNumberToken(ETokenType type, float value) : CBaseToken(type), m_value(value) {};
-	~CNumberToken() = default;
+	CFloatNumberToken(float value) : CBaseToken(ETokenType::FLOAT_NUMBER), m_value(value) {};
+	~CFloatNumberToken() = default;
 public:
 	float getValue() const { return m_value; };
 	virtual std::string toString() const ;
@@ -27,17 +27,22 @@ private:
 	float m_value = 0.0f;
 };
 
+class CIntNumberToken : public CBaseToken
+{
+public:
+	CIntNumberToken(int value) : CBaseToken(ETokenType::INTEGER_NUMBER), m_value(value) {};
+	~CIntNumberToken() = default;
+public:
+	int getValue() const { return m_value; };
+	virtual std::string toString() const { return std::to_string(m_value); };
+private:
+	int m_value = 0;
+};
+
 class COperationToken : public CBaseToken
 {
 public:
-	COperationToken(ETokenType type, EOperations operationType) : CBaseToken(type), m_operationType(operationType) 
-	{
-		if (operationType == EOperations::ADDITION || operationType == EOperations::SUBSTRACTION)
-			m_precedence = 1u;
-		else
-		if (operationType == EOperations::DIVISION || operationType == EOperations::MULTIPLICATION)
-			m_precedence = 2u;
-	};
+	COperationToken(ETokenType type, EOperations operationType) ;
 	~COperationToken() = default;
 public:
 	EOperations getOperationType() const { return m_operationType; };
