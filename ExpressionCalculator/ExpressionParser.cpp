@@ -4,14 +4,14 @@
 
 std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& exp)
 {
-	auto strw = std::string_view{ exp };
+	auto sv = std::string_view{ exp };
 	auto mStack = std::stack<CBaseTokenPtr>{};
 	auto mQueue = std::queue<CBaseTokenPtr>{};
 
 	bool canBeNegativeNumber = true;
-	while (!strw.empty())
+	while (!sv.empty())
 	{
-		const auto token = getNextToken(strw, canBeNegativeNumber);
+		const auto token = getNextToken(sv, canBeNegativeNumber);
 
 		if (token == nullptr)
 			continue;
@@ -45,7 +45,7 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 		break;
 		case ETokenType::UNKNOWN:
 		{
-			throw std::exception("UNKNOWN TOKEN");
+			throw std::exception("Unknown Symbol");
 		}
 		break;
 		}
@@ -56,7 +56,9 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 		if (mStack.top()->getType() == ETokenType::LEFT_PARENTHESIS ||
 			mStack.top()->getType() == ETokenType::RIGHT_PARENTHESIS)
 		{
-			throw std::exception("Extra Parenthesis");
+			std::string error = "Too many parentheses in an expression: ";
+			error += mStack.top()->toString();
+			throw std::exception(error.c_str());
 		}
 
 		mQueue.push(mStack.top());
@@ -64,7 +66,11 @@ std::queue<CBaseTokenPtr> ExpressionParser::parseExpression(const std::string& e
 	}
 
 	if (!mStack.empty())
-		throw std::exception("Too many operators or something else;");
+	{
+		std::string error = "Too many operators in an expression: ";
+		error += mStack.top()->toString();
+		throw std::exception(error.c_str());
+	}
 
 	return mQueue;
 }
@@ -118,8 +124,12 @@ CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv, bool canBeNeg
 				}
 				else
 				{
-					if(symbol != ' ')
-						throw std::exception("Wrong Operator");
+					if (symbol != ' ')
+					{
+						std::string error = "Unknown symbol: ";
+						error += symbol;
+						throw std::exception(error.c_str());
+					}
 					sv.remove_prefix(1);
 				}
 			}
@@ -191,7 +201,7 @@ float ExpressionParser::toFloat(std::string_view& sv, size_t pointPosition)
 		}
 
 		if (digitsAfterPoint == 1u)
-			throw std::exception("0 digist after point!");
+			throw std::exception("zero digits after floating point");
 	}
 
 	return number;
@@ -269,7 +279,7 @@ float ExpressionParser::parseFloatingPart(const std::string_view& sv, size_t num
 	size_t rank = 10u;
 	for (size_t i = 0 ; i < numbersNum; i++)
 	{
-		size_t tmpNumber = sv[i] - '0';
+		float tmpNumber = sv[i] - '0';
 		number += tmpNumber / rank;
 		rank *= 10u;
 	}
@@ -367,7 +377,7 @@ float ExpressionParser::parseFloat(std::string_view& sv, bool minus, size_t poin
 	auto numbersAfterPoint = findFirstNotNumber(sv);
 
 	if (numbersAfterPoint == 0)
-		throw std::exception("Empty after point part of number");
+		throw std::exception("zero digits after floating point");
 
 	if (numbersAfterPoint == std::string::npos)
 		numbersAfterPoint = sv.size();
@@ -440,5 +450,7 @@ float ExpressionParser::calculateExpression(std::queue<CBaseTokenPtr>&& mQueue)
 float ExpressionParser::calculateExpression(const std::string& expression)
 {
 	auto mQueue = parseExpression(expression);
-	return calculateExpression(std::move(mQueue));
+	auto result = calculateExpression(std::move(mQueue));
+
+	return result;
 }

@@ -48,7 +48,6 @@ public:
 	EOperations getOperationType() const { return m_operationType; };
 	std::uint8_t getPrecedence() const { return m_precedence; };
 	float applyOperator(float left, float right) const;
-	int applyOperator(int left, int right) const;
 	virtual std::string toString() const;
 private:
 	EOperations m_operationType = EOperations::UNKNOWN;

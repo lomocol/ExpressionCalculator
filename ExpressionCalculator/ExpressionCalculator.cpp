@@ -1,7 +1,6 @@
 #include "ExpressionParser.h"
 #include "TestHelper.h"
-#include <iostream>
-#include <vector>
+#include <iomanip>
 
 int main()
 {
@@ -16,7 +15,24 @@ int main()
 	{
 		try {
 			auto result = Parser().calculateExpression(in);
-			std::cout << "Result: " << result << '\n';
+			std::string resultStr{ std::to_string(result) };
+
+			// round
+			const auto precision = 2u;
+			result = std::round(result * std::pow(10, precision)) / std::pow(10, precision);
+
+			auto pos = resultStr.find('.');
+			if (pos != std::string::npos)
+			{
+				const auto numsAfterPoint = resultStr.size() - pos - 1;
+				if (numsAfterPoint > precision)
+				{
+					const auto numsToErase = numsAfterPoint - precision;
+					resultStr.erase(std::prev(resultStr.end(), resultStr.size() - numsAfterPoint - 1), resultStr.end());
+				}
+			}
+
+			std::cout << "Result: " << resultStr << '\n';
 		}
 		catch (std::exception& e) {
 			std::cerr << "Wrong expression: " << e.what() << std::endl;
@@ -24,6 +40,5 @@ int main()
 		catch (...) {
 			std::cerr << "Unknown exception caught" << std::endl;
 		}
-
 	}
 }
