@@ -1,6 +1,6 @@
 #include "Token.h"
 
-COperationToken::COperationToken(ETokenType type, EOperations operationType) : CBaseToken(type), m_operationType(operationType)
+COperationToken::COperationToken(EOperations operationType) : CBaseToken(ETokenType::OPERATOR), m_operationType(operationType)
 {
     if (operationType == EOperations::ADDITION || operationType == EOperations::SUBSTRACTION)
 	{
@@ -12,7 +12,28 @@ COperationToken::COperationToken(ETokenType type, EOperations operationType) : C
 		m_precedence = 2u;
     }
 }
-
+int COperationToken::applyOperator(int left, int right) const
+{
+	switch (m_operationType)
+	{
+	case EOperations::SUBSTRACTION:
+		return left - right;
+		break;
+	case EOperations::ADDITION:
+		return left + right;
+		break;
+	case EOperations::DIVISION:
+		return left / right;
+		break;
+	case EOperations::MULTIPLICATION:
+		return left * right;
+		break;
+	case EOperations::UNKNOWN:
+		throw std::exception("Wrong operator was tried to be applied");
+		break;
+	}
+	return 0.0f;
+}
 float COperationToken::applyOperator(float left, float right) const
 {
 	switch (m_operationType)

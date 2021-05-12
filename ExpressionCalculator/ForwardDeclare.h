@@ -4,4 +4,5 @@
 
 using CBaseTokenPtr = std::shared_ptr<CBaseToken>;
 using COperationTokenPtr = std::shared_ptr<COperationToken>;
-using CNumberTokenPtr = std::shared_ptr<CFloatNumberToken>;
+using CFloatNumberTokenPtr = std::shared_ptr<CFloatNumberToken>;
+using CIntNumberTokenPtr = std::shared_ptr<CIntNumberToken>;

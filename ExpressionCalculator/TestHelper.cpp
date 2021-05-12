@@ -6,8 +6,9 @@
 void TestHelper::runAllTests()
 {
 	TestRunner runner{};
+	RUN_TEST(runner, TestHelper::runCalculationTest);
 	RUN_TEST(runner, TestHelper::runParsingTests);
-	RUN_TEST(runner, TestHelper::runSpelling);
+	RUN_TEST(runner, TestHelper::runCompleteSpeedTests);
 }
 
 void TestHelper::runCompleteSpeedTests()
@@ -118,8 +119,77 @@ void TestHelper::runParsingTests()
 	}
 }
 
-void TestHelper::runSpelling()
+
+void TestHelper::runCalculationTest()
 {
+	auto generateQueue = [](std::vector<std::string> rawTokens) -> std::queue<CBaseTokenPtr>
+	{
+		auto createToken = [](std::string& token) -> CBaseTokenPtr
+		{
+			CBaseTokenPtr tokenPtr = nullptr;
+			if (token.size() == 1)
+			{
+				if (token.front() == ')')
+					tokenPtr = std::make_shared<CBaseToken>(ETokenType::RIGHT_PARENTHESIS);
+				else if (token.front() == '(')
+					tokenPtr = std::make_shared<CBaseToken>(ETokenType::LEFT_PARENTHESIS);
+				else if (token.front() == '*')
+					tokenPtr = std::make_shared<COperationToken>(EOperations::MULTIPLICATION);
+				else if (token.front() == '/')
+					tokenPtr = std::make_shared<COperationToken>(EOperations::DIVISION);
+				else if (token.front() == '+')
+					tokenPtr = std::make_shared<COperationToken>(EOperations::ADDITION);
+				else if (token.front() == '-')
+					tokenPtr = std::make_shared<COperationToken>(EOperations::SUBSTRACTION);
+				else
+				{
+					auto value = std::stoi(token);
+					tokenPtr = std::make_shared<CIntNumberToken>(value);
+				}
+			}
+			else
+			{
+				if (token.find('.') != std::string::npos ||
+					token.find(',') != std::string::npos)
+				{
+					auto value = std::stof(token);
+					tokenPtr = std::make_shared<CFloatNumberToken>(value);
+				}
+				else
+				{
+					auto value = std::stoi(token);
+					tokenPtr = std::make_shared<CIntNumberToken>(value);
+				}
+			}
+			return tokenPtr;
+		};
 
+		std::queue<CBaseTokenPtr> queue{};
+		for (auto& rawToken : rawTokens)
+		{
+			auto tokenPtr = createToken(rawToken);
+			queue.push(tokenPtr);
+		}
 
+		return queue;
+	};
+
+	{
+		auto queue = generateQueue({ "365", "13", "-1", "+", "/" });
+		auto target = 30.4167;
+		auto result = Parser().calculateExpression(std::move(queue));
+		ASSERT_EQUAL_FLOATS(result, target);
+	}
+	{
+		auto queue = generateQueue({ "77", "12.6", "-" });
+		auto target = 64.4;
+		auto result = Parser().calculateExpression(std::move(queue));
+		ASSERT_EQUAL_FLOATS(result, target);
+	}
+	{
+		auto queue = generateQueue({ "22.34", "29.2", "2", "/", "+" });
+		auto target = 36.94f;
+		auto result = Parser().calculateExpression(std::move(queue));
+		ASSERT_EQUAL_FLOATS(result, target);
+	}
 }

@@ -10,6 +10,6 @@ public:
 private:
 	static void runCompleteSpeedTests();
 	static void runParsingTests();
-	static void runSpelling();
+	static void runCalculationTest();
 };
 

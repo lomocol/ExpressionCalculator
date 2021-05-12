@@ -112,7 +112,7 @@ CBaseTokenPtr ExpressionParser::getNextToken(std::string_view& sv, bool canBeNeg
 					}
 					else
 					{
-						token = std::make_shared<COperationToken>(ETokenType::OPERATOR, operand);
+						token = std::make_shared<COperationToken>(operand);
 						sv.remove_prefix(1);
 					}
 				}
@@ -287,6 +287,38 @@ size_t ExpressionParser::powerOfTen(size_t power)
 }
 
 
+void ExpressionParser::processTwoTokens(std::stack<CBaseTokenPtr>& mStack, CBaseTokenPtr operation)
+{
+	float second = 0.0f;
+	float first = 0.0f;
+
+	if (mStack.top()->getType() == ETokenType::FLOAT_NUMBER)
+	{
+		second = std::static_pointer_cast<CFloatNumberToken>(mStack.top())->getValue();
+		mStack.pop();
+	}
+	else
+	{
+		second = std::static_pointer_cast<CIntNumberToken>(mStack.top())->getValue();
+		mStack.pop();
+	}
+
+	if (mStack.top()->getType() == ETokenType::FLOAT_NUMBER)
+	{
+		first = std::static_pointer_cast<CFloatNumberToken>(mStack.top())->getValue();
+		mStack.pop();
+	}
+	else
+	{
+		first = std::static_pointer_cast<CIntNumberToken>(mStack.top())->getValue();
+		mStack.pop();
+	}
+
+	const auto result = std::static_pointer_cast<COperationToken>(operation)->applyOperator(first, second);
+	mStack.push(std::make_shared<CFloatNumberToken>(result));
+	
+}
+
 std::string ExpressionParser::toString(std::queue<CBaseTokenPtr> queue)
 {
 	std::string str{};
@@ -397,16 +429,8 @@ float ExpressionParser::calculateExpression(std::queue<CBaseTokenPtr>&& mQueue)
 		}else
 			if (frontToken->getType() == ETokenType::OPERATOR)
 			{
-				const auto second = std::static_pointer_cast<CFloatNumberToken>(mStack.top())->getValue();
-				mStack.pop(); 
-
-				float first = std::static_pointer_cast<CFloatNumberToken>(mStack.top())->getValue();
-				mStack.pop();
-
-				const auto result = std::static_pointer_cast<COperationToken>(frontToken)->applyOperator(first, second);
-				mStack.push(std::make_shared<CFloatNumberToken>(result));
+				processTwoTokens(mStack, frontToken);
 			}
-
 		mQueue.pop();
 	}
 

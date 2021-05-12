@@ -43,6 +43,8 @@ private:
 	size_t parseNumber(const std::string_view& sv, size_t numbersNum);
 	size_t powerOfTen(size_t power);
 
+	void processTwoTokens(std::stack<CBaseTokenPtr>& mStack, CBaseTokenPtr operation);
+
 	// parse integer
 	int parseInteger(std::string_view& sv, bool minus);
 

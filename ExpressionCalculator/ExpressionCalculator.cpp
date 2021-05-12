@@ -5,19 +5,25 @@
 
 int main()
 {
-	auto testHelper = TestHelper();
-	testHelper.runAllTests();
-	//testHelper.runCompleteSpeedTests();
-	//std::string in = "-21 - (-21)";
-	//std::getline(std::cin, in);
-	/*auto queue = ExpressionParser::parseExpression(in);
-	std::cout << ExpressionParser::toString(queue) << '\n';
-	auto result = ExpressionParser::calculateExpression(std::move(queue));
-	std::cout << "Result: " << result << '\n';*/
+	std::string in = "";
+	std::getline(std::cin, in);
+	if (in == "tests")
+	{
+		auto testHelper = TestHelper();
+		testHelper.runAllTests();
+	}
+	else
+	{
+		try {
+			auto result = Parser().calculateExpression(in);
+			std::cout << "Result: " << result << '\n';
+		}
+		catch (std::exception& e) {
+			std::cerr << "Wrong expression: " << e.what() << std::endl;
+		}
+		catch (...) {
+			std::cerr << "Unknown exception caught" << std::endl;
+		}
 
-
-	//std::string in{};
-	//std::getline(std::cin, in);
-	//auto queue = ExpressionParser::parseExpression(in);
-	//std::cout << ExpressionParser::toString(queue) << '\n';
+	}
 }
